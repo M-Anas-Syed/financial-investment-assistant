@@ -1,13 +1,17 @@
 import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter, Routes, Route} from "react-router-dom";
+import Main from './pages/Main';
+import Register from './pages/Register';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        Financial Investement Assistant
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Main/>}/>
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

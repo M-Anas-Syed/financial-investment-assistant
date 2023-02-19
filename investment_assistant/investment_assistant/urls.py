@@ -15,11 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import index
+from fia import views
 
 urlpatterns = [
-    path('', index),
+    path('', views.index, name='index'),
     path('admin/', admin.site.urls),
-
+    path('register', views.RegisterView.as_view(), name='register'),
+    path('login', views.LoginView.as_view(), name='login'),
+    path('buy', views.Action.as_view(), name='buy'),
+    path('portfolio', views.PortfolioView.as_view(), name='portfolio')
 ]
 
