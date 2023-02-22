@@ -10,6 +10,8 @@ function Portfolio() {
     const [quantity, setQuantity] = useState({});
     const [total, setTotal] = useState({});
     const [accountValue, setAccountValue] = useState(0);
+    const [currentPrice, setCurrentPrice] = useState(0);
+    const [purchaseDate, setPurchaseDate] = useState(0);
 
     useEffect(() => {
         Axios.get("http://127.0.0.1:8000/portfolio").then((response) =>{
@@ -19,6 +21,8 @@ function Portfolio() {
             setQuantity(response.data.stock_quantity);
             setTotal(response.data.total);
             setAccountValue(response.data.acc);
+            setCurrentPrice(response.data.curr_price);
+            setPurchaseDate(response.data.purchase_date)
         });
     }, []);
 
@@ -31,7 +35,9 @@ function Portfolio() {
         <MDBTableHead>
           <tr>
             <th scope="col">Symbol</th>
+            <th scope="col">Purchase Date</th>
             <th scope="col">Price</th>
+            <th scope="col">Current Price</th>
             <th scope="col">Quantity</th>
             <th scope="col">Total</th>
           </tr>
@@ -48,7 +54,17 @@ function Portfolio() {
             
           </td>
           <td>
+          {purchaseDate.length > 0 && purchaseDate.map((x) => 
+                <tr scope="row">{x}</tr>
+            )}
+          </td>
+          <td>
           {price.length > 0 && price.map((x) => 
+                <tr scope="row">{x}</tr>
+            )}
+          </td>
+          <td>
+          {currentPrice.length > 0 && currentPrice.map((x) => 
                 <tr scope="row">{x}</tr>
             )}
           </td>

@@ -163,24 +163,67 @@ class PortfolioView(APIView):
 
     def get(self, request, *args, **kwargs):
         if request.method == 'GET':
+            print(User.objects.filter(last_login__isnull=False).latest('last_login'))
             p = Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
             syms = []
             purchasedates = []
             stkprice = []
             stkquantity = []
             total = []
+            curr_price = []
             for i in p:
                 syms.append(i.stock_symbol)
+                ticker = i.stock_symbol
+                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=WSKWF8OYUKBBJ4WT'
+                r = requests.get(url)
+                stockpri = r.json()
+                print(stockpri['Global Quote']['05. price'])
+                curr_price.append(stockpri['Global Quote']['05. price'])
                 purchasedates.append(i.purchase_date)
                 stkprice.append(i.stock_price)
                 stkquantity.append(i.stock_quantity)
                 total.append(i.stock_price*i.stock_quantity)
 
             acc = AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login'))[0]
-            print(acc.account_value)
+            # print(acc.account_value)
 
-            return Response({'symbol': syms, 'purchase_date':purchasedates, 'stock_price': stkprice, 'stock_quantity': stkquantity, 'total': total, 'acc':acc.account_value}, status=status.HTTP_200_OK)
+            return Response({'symbol': syms, 'purchase_date':purchasedates, 'stock_price': stkprice, 'stock_quantity': stkquantity, 'total': total, 'acc':acc.account_value, 'curr_price': curr_price}, status=status.HTTP_200_OK)
 
+
+class Search(APIView):
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        ticker = request.data.get('stock_symbol')
+        url = 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords='+ticker+'&apikey=WSKWF8OYUKBBJ4WT'
+        r = requests.get(url)
+        data = r.json()
+
+        symbols = []
+        for i in range(len(data['bestMatches'])):
+            temp = {}
+            temp['id'] = i
+            temp['name'] = data['bestMatches'][i]['1. symbol']
+            symbols.append(temp)
+
+        return Response({'suggested_symbols': symbols}, status=status.HTTP_200_OK)
+
+class Chart(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.data 
+        ticker = request.data.get('symbol')
+        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol='+str(ticker)+'&apikey=WSKWF8OYUKBBJ4WT'
+        r = requests.get(url)
+        data = r.json()
+
+        date = []
+        close = []
+
+        for i in data['Monthly Time Series']:
+            date.append(i)
+            close.append(data['Monthly Time Series'][i]['4. close'])
+
+        return Response({'chart_date': date, 'chart_close': close},status=status.HTTP_200_OK)
 
 
 #Algorithm

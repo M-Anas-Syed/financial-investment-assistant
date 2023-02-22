@@ -23,6 +23,8 @@ urlpatterns = [
     path('register', views.RegisterView.as_view(), name='register'),
     path('login', views.LoginView.as_view(), name='login'),
     path('buy', views.Action.as_view(), name='buy'),
-    path('portfolio', views.PortfolioView.as_view(), name='portfolio')
+    path('portfolio', views.PortfolioView.as_view(), name='portfolio'),
+    path('search', views.Search.as_view(), name='search'),
+    path('chart', views.Chart.as_view(), name='chart')
 ]
 
