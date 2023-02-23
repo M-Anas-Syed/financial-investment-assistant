@@ -23,7 +23,8 @@ from datetime import date
 from .models import Portfolio, AccountOverview
 
 
-api_key = 'WSKWF8OYUKBBJ4WT'
+# api_key = 'WSKWF8OYUKBBJ4WT'
+api_key = 'BHK6SSOLPWK5SLRA'
 
 def index(request, *args, **kwargs):
     return render(request, 'index.html')
@@ -104,9 +105,10 @@ class Action(APIView):
                 data = request.data
                 data['purchase_date'] = date.today() 
                 ticker = request.data.get('stock_symbol')
-                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=WSKWF8OYUKBBJ4WT'
+                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=BHK6SSOLPWK5SLRA'
                 r = requests.get(url)
                 stockinfo = r.json()
+                print(stockinfo)
                 data['stock_price'] = stockinfo['Global Quote']['05. price']
                 temp = AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
                 # print(temp[0].account_value)
@@ -129,7 +131,7 @@ class Action(APIView):
             if request.data.get('action') == 'Sell':
                 data = request.data
                 ticker = request.data.get('stock_symbol')
-                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=WSKWF8OYUKBBJ4WT'
+                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=BHK6SSOLPWK5SLRA'
                 r = requests.get(url)
                 stockpri = r.json()
                 data['stock_price'] = stockpri['Global Quote']['05. price']
@@ -174,7 +176,7 @@ class PortfolioView(APIView):
             for i in p:
                 syms.append(i.stock_symbol)
                 ticker = i.stock_symbol
-                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=WSKWF8OYUKBBJ4WT'
+                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey=BHK6SSOLPWK5SLRA'
                 r = requests.get(url)
                 stockpri = r.json()
                 print(stockpri['Global Quote']['05. price'])
@@ -195,7 +197,7 @@ class Search(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         ticker = request.data.get('stock_symbol')
-        url = 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords='+ticker+'&apikey=WSKWF8OYUKBBJ4WT'
+        url = 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords='+ticker+'&apikey=BHK6SSOLPWK5SLRA'
         r = requests.get(url)
         data = r.json()
 
@@ -212,13 +214,13 @@ class Chart(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data 
         ticker = request.data.get('symbol')
-        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol='+str(ticker)+'&apikey=WSKWF8OYUKBBJ4WT'
+        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol='+str(ticker)+'&apikey=BHK6SSOLPWK5SLRA'
         r = requests.get(url)
         data = r.json()
 
         date = []
         close = []
-
+        # print(data)
         for i in data['Monthly Time Series']:
             date.append(i)
             close.append(data['Monthly Time Series'][i]['4. close'])

@@ -10,6 +10,8 @@ import {
   MDBSelect,
 } from "mdb-react-ui-kit";
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
+import Chart from "react-google-charts";
+import Plot from 'react-plotly.js';
 
 function Buy() {
   Axios.defaults.withCredentials = true;
@@ -84,6 +86,10 @@ function Buy() {
     });
   }
 
+  useEffect(() => {
+
+  }, []);
+
   const handleOnSearch = (string, results) => {
     // onSearch will have as the first callback parameter
     // the string searched and for the second the results.
@@ -101,7 +107,7 @@ function Buy() {
     // the item selected
     console.log("the selected item");
     console.log(item['name']);
-    // setSymbol(item['name']);
+    setSymbol(item['name']);
     chart_data(item['name']);
   }
 
@@ -117,6 +123,7 @@ function Buy() {
     <div>
       <MDBContainer className="p-3 my-5 d-flex flex-column w-50">
         <form>
+
           <ReactSearchAutocomplete
             items={items}
             onSearch={handleOnSearch}
@@ -125,7 +132,20 @@ function Buy() {
             onFocus={handleOnFocus}
             onClear={handleOnClear}
             autoFocus
+            
           />
+          <Plot
+            data={[
+              {
+                x: dates,
+                y: close,
+                fill: 'tozeroy',
+                type: 'scatter',
+              }
+            ]}
+            layout={{width: 800, height: 500, title:''}}
+            style={{ position: 'relative', zIndex: '-2', marginTop:'20px'}}
+            />
           {/* <MDBInput
             wrapperClass="mb-4"
             label="Search Symbol (Example: IBM)"
