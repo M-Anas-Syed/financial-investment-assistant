@@ -25,6 +25,8 @@ urlpatterns = [
     path('buy', views.Action.as_view(), name='buy'),
     path('portfolio', views.PortfolioView.as_view(), name='portfolio'),
     path('search', views.Search.as_view(), name='search'),
-    path('chart', views.Chart.as_view(), name='chart')
+    path('chart', views.Chart.as_view(), name='chart'),
+    path('logout', views.Logout.as_view(), name='logout')
+
 ]
 

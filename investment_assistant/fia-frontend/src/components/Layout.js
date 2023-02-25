@@ -25,6 +25,7 @@ const Layout = () => {
   const signout = () => {
     Axios.post("http://127.0.0.1:8000/logout").then((response) =>{
         console.log(response.data);
+        navigate("/register");
     });
   }
 

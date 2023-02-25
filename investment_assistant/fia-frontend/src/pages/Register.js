@@ -65,19 +65,6 @@ function Register() {
         });
     }
 
-    const test = async() => {
-        const csrftoken = Cookies.get('csrftoken');
-
-        await Axios.get("http://127.0.0.1:8000/login",  {
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json'
-            }
-            }).then((response) =>{
-            console.log(response.data);
-        })
-    }
-
     const [justifyActive, setJustifyActive] = useState('tab1');;
 
     const handleJustifyClick = (value) => {

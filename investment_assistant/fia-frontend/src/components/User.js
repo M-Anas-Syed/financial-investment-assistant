@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 import Layout from "./Layout";
 import Buy from "./Buy";
 import {
@@ -8,28 +8,13 @@ import {
   MDBTabsLink,
   MDBTabsContent,
   MDBTabsPane,
-  MDBBtn,
-  MDBInput,
 } from "mdb-react-ui-kit";
 import Portfolio from "./Portfolio";
-import Chart from "react-google-charts";
+import Axios from "axios";
+
 
 function User() {
   const [justifyActive, setJustifyActive] = useState("tab1");
-
-  const data = [
-    ["Year", "Sales"],
-    ["2004", 1000],
-    ["2005", 1170],
-    ["2006", 660],
-    ["2007", 1030],
-  ];
-
-  const options = {
-    title: "Company Performance",
-    curveType: "function",
-    legend: { position: "bottom" },
-  };
 
   const handleJustifyClick = (value) => {
     if (value === justifyActive) {
@@ -68,14 +53,7 @@ function User() {
       </MDBContainer>
       <MDBTabsContent className="p-3 my-5 d-flex flex-column w-50 mx-auto">
         <MDBTabsPane show={justifyActive === "tab1"}>
-          <Chart
-            chartType="LineChart"
-            width="100%"
-            height="400px"
-            data={data}
-            options={options}
-          />
-
+          
           <Portfolio />
         </MDBTabsPane>
 

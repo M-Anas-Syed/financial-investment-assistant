@@ -8,23 +8,33 @@ import {
   MDBBtn,
   MDBContainer,
   MDBSelect,
+  MDBTable, MDBTableHead, MDBTableBody
 } from "mdb-react-ui-kit";
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 import Chart from "react-google-charts";
 import Plot from 'react-plotly.js';
+import { useNavigate } from "react-router-dom";
+
 
 function Buy() {
   Axios.defaults.withCredentials = true;
   Axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
   Axios.defaults.xsrfCookieName = "csrftoken";
 
+  const navigate = useNavigate();
+
   const [symbol, setSymbol] = useState("");
-  const [price, setPrice] = useState("");
   const [action, setAction] = useState("Buy");
   const [quantity, setQuantity] = useState(0);
   const [items, setItems] = useState("");
   const [dates, setDates] = useState({});
   const [close, setClose] = useState({});
+  const [volume, setVolume] = useState(0);
+  const [high, setHigh] = useState(0);
+  const [low, setLow] = useState(0);
+  const [price, setPrice] = useState(0);
+  const [prediction, setPrediction] = useState("");
+
 
   const buy = (event) => {
     event.preventDefault();
@@ -37,7 +47,7 @@ function Buy() {
       })
         .then((response) => {
           console.log(response.data);
-          setPrice(response.data.price);
+          navigate("/");
         })
         .catch((error) => {
           console.log(error);
@@ -50,7 +60,7 @@ function Buy() {
       })
         .then((response) => {
           console.log(response.data);
-          setPrice(response.data.price);
+          navigate("/");
         })
         .catch((error) => {
           console.log(error);
@@ -71,24 +81,25 @@ function Buy() {
     });
   }
 
-  const chart_data = (S) => {
-    Axios.post("http://127.0.0.1:8000/chart", {
+  const chart_data = async (S) => {
+    await Axios.post("http://127.0.0.1:8000/chart", {
       symbol: S
     })
     .then((response) => {
       console.log(response.data.chart_date);
       setDates(response.data.chart_date);
       setClose(response.data.chart_close);
-
+      setVolume(response.data.volume);
+      setHigh(response.data.high);
+      setLow(response.data.low);
+      setPrice(response.data.curr_price);
+      setPrediction(response.data.prediction);
     })
     .catch((error) => {
       console.log(error);
     });
   }
 
-  useEffect(() => {
-
-  }, []);
 
   const handleOnSearch = (string, results) => {
     // onSearch will have as the first callback parameter
@@ -121,7 +132,7 @@ function Buy() {
 
   return (
     <div>
-      <MDBContainer className="p-3 my-5 d-flex flex-column w-50">
+      <MDBContainer className="p-3 my-5 d-flex flex-column ">
         <form>
 
           <ReactSearchAutocomplete
@@ -134,18 +145,40 @@ function Buy() {
             autoFocus
             
           />
-          <Plot
-            data={[
-              {
-                x: dates,
-                y: close,
-                fill: 'tozeroy',
-                type: 'scatter',
-              }
-            ]}
-            layout={{width: 800, height: 500, title:''}}
-            style={{ position: 'relative', zIndex: '-2', marginTop:'20px'}}
-            />
+          <p>{prediction}</p>
+          <div style={{display: 'flex', width: '100%'}}>
+          
+          <MDBTable>
+            <MDBTableHead>
+            <tr>
+                <th scope="col">Volume</th>
+                <th scope="col">Days High</th>
+                <th scope="col">Days Low</th>
+                <th scope="col">Current Price</th>
+                
+            </tr>
+            </MDBTableHead>
+            <MDBTableBody>
+                  <td><tr scope="row">{volume}</tr></td>
+                  <td><tr scope="row">{high}</tr></td>
+                  <td><tr scope="row">{low}</tr></td>
+                  <td><tr scope="row">{price}</tr></td>
+            </MDBTableBody>
+          </MDBTable>
+            <Plot
+              data={[
+                {
+                  x: dates,
+                  y: close,
+                  fill: 'tozeroy',
+                  type: 'scatter',
+                }
+              ]}
+              layout={{width: 800, height: 500, title:'', xaxis:{title:"Timeline"}, yaxis:{title:"Value"}} }
+              style={{ position: 'relative', zIndex: '-2', marginTop:'20px'}}
+              />
+            </div>
+          
           {/* <MDBInput
             wrapperClass="mb-4"
             label="Search Symbol (Example: IBM)"
