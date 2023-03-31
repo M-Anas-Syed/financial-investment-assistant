@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import UserProfile, Portfolio, AccountOverview
+from .models import UserProfile, Portfolio, AccountOverview, ForumQuestion, ForumResponse
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,8 +12,17 @@ class PortfolioSerializer(serializers.ModelSerializer):
         model = Portfolio
         fields = ('id','user', 'stock_symbol', 'purchase_date', 'stock_price', 'stock_quantity')
 
-
 class AccountOverviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountOverview
         fields = ('id', 'user', 'account_value')
+
+class ForumQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ForumQuestion
+        fields = ('id', 'user', 'question', 'date_created')
+
+class ForumResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ForumResponse
+        fields = ('id', 'user', 'belongs_to', 'response', 'date_created')

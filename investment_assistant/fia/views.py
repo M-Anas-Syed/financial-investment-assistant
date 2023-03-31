@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import generics, status
-from .serializers import UserSerializer, PortfolioSerializer, AccountOverviewSerializer
+from .serializers import UserSerializer, PortfolioSerializer, AccountOverviewSerializer, ForumQuestionSerializer, ForumResponseSerializer
 from rest_framework import viewsets
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
@@ -20,7 +20,7 @@ import requests
 import json
 from alpha_vantage.timeseries import TimeSeries
 from datetime import date
-from .models import Portfolio, AccountOverview
+from .models import Portfolio, AccountOverview, ForumQuestion, ForumResponse
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -71,6 +71,7 @@ def algorithm(stock):
     future_price = future_close * np.exp(future_returns)
 
     return future_price
+
 
 def index(request, *args, **kwargs):
     return render(request, 'index.html')
@@ -145,7 +146,6 @@ class Logout(APIView):
 
 class Action(APIView):
     def post(self, request, *args, **kwargs):
-        
         # print(Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).latest('purchase_date').value)
         if request.method == 'POST':
             if request.data.get('action') == 'Buy':
@@ -286,3 +286,76 @@ class Chart(APIView):
         print(prediction)
         return Response({'chart_date': date, 'chart_close': close, 'volume': volume, 'high': high, 'low': low, 'curr_price': curr_price, 'prediction': prediction},status=status.HTTP_200_OK)
 
+
+class AllPortfolios(APIView):
+
+    def get(self, request, *args, **kwargs):
+        if request.method == 'GET':
+            p = Portfolio.objects.all().values()
+            # print(p)
+            portfolios = []
+            for i in p:
+                print(i)
+                temp = []
+                temp.append(i['stock_symbol'])
+                temp.append(i['purchase_date'])
+                temp.append(i['stock_price'])
+                temp.append(i['stock_quantity'])
+                u = User.objects.filter(id=i['user_id']).get()
+                temp.append(u.username)
+                # print(u)
+                portfolios.append(temp)
+
+            return Response({'portfolios': portfolios}, status=status.HTTP_200_OK)
+
+
+class ForumQuestions(APIView):
+
+    def get(self, request, *args, **kwargs):
+        if request.method == 'GET':
+            q = ForumQuestion.objects.all().values()
+            quesList = []
+            for i in q:
+                temp = []
+                temp.append(i['id'])
+                temp.append(i['question'])
+                quesList.append(temp)
+            print(quesList)
+
+            return Response({'questions': quesList}, status=status.HTTP_200_OK)
+
+
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            data = request.data 
+            forum_serializer = ForumQuestionSerializer(data=data)
+            if forum_serializer.is_valid():
+                forum_serializer.save(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
+                return Response(forum_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(forum_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ForumAnswers(APIView):
+
+    def get(self, request, *args, **kwargs):
+        if request.method == 'GET':
+            a = ForumResponse.objects.all().values()
+            resList = []
+            for i in a:
+                temp = []
+                print(i)
+                temp.append(i['belongs_to_id'])
+                temp.append(i['response'])
+                resList.append(temp)
+            print(resList)
+
+            return Response({'response': resList}, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            data = request.data 
+            forum_serializer = ForumResponseSerializer(data=data)
+            if forum_serializer.is_valid():
+                forum_serializer.save(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
+                return Response(forum_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(forum_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

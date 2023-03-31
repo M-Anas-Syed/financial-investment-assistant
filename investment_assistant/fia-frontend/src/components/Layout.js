@@ -56,7 +56,7 @@ const Layout = () => {
                 </MDBNavbarLink>
               </MDBNavbarItem>
               <MDBNavbarItem>
-                <MDBNavbarLink href="#">Ask an Expert</MDBNavbarLink>
+                <MDBNavbarLink href="askexpert">Ask an Expert</MDBNavbarLink>
               </MDBNavbarItem>
               <MDBNavbarItem>
                 <p className='text-light bg-dark m-0'>User</p>

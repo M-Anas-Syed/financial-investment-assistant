@@ -26,7 +26,10 @@ urlpatterns = [
     path('portfolio', views.PortfolioView.as_view(), name='portfolio'),
     path('search', views.Search.as_view(), name='search'),
     path('chart', views.Chart.as_view(), name='chart'),
-    path('logout', views.Logout.as_view(), name='logout')
+    path('logout', views.Logout.as_view(), name='logout'),
+    path('allportfolios', views.AllPortfolios.as_view(), name='allportfolios'),
+    path('forumquestion', views.ForumQuestions.as_view(), name='forumquestion'),
+    path('forumresponse', views.ForumAnswers.as_view(), name='forumresponse'),
 
 ]
 

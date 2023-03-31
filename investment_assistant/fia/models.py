@@ -31,6 +31,23 @@ class AccountOverview(models.Model):
         return str(self.account_value)
 
 
+class ForumQuestion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    question = models.CharField(max_length=300, unique=True)
+    date_created=models.DateTimeField(auto_now_add=True,null=True)
+
+    def __str__(self):
+        return self.question
+
+class ForumResponse(models.Model):
+    belongs_to = models.ForeignKey(ForumQuestion, on_delete=models.CASCADE, default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    response = models.CharField(max_length=300, unique=True)
+    date_created=models.DateTimeField(auto_now_add=True,null=True)
+
+    def __str__(self):
+        return self.response
+
 class Rankings(models.Model):
     user = models.CharField(max_length=8, unique=True)
     net_profit = models.IntegerField()
