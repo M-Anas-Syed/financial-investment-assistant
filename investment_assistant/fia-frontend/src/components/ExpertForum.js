@@ -59,34 +59,34 @@ function ExpertForum(props) {
   return (
     <div>
       <MDBContainer className="px-5 my-5 d-flex flex-column ">
-        <div>
-          {showQuestion.length > 0 &&
-            showQuestion.map((x) => (
-              <div className="bg-blue-gray-100 shadow-2 position-relative ">
-                <p>{x[1]}</p>
-                {showResponse.map((r) => (
-                  x[0] === r[0] ? <p>{r[1]}</p>: <p></p>
-                ))}
-                <form>
-                  <MDBInput
-                    wrapperClass="mb-4"
-                    textarea
-                    id="Answer"
-                    rows={4}
-                    label="Answer"
-                    onChange={(e) => {
-                      setAnswer(e.target.value);
-                      setQid(x[0]);
-                    }}
-                  />
-                  <MDBBtn className="mb-4" onClick={postResponse} block>
-                    Post
-                  </MDBBtn>
-                </form>
-              </div>
-            ))}
-        </div>
-        <form>
+      <div>
+            {showQuestion.length > 0 &&
+              showQuestion.map((x) => (
+                <div className="bg-blue-gray-100 shadow-2 position-relative ">
+                  <p className="fs-5 p-2" style={{ backgroundColor: "#CFD8DC"}} >{x[2]}: {x[1]}</p>
+                  {showQuestion.length > 0 && showResponse.map((r) => (
+                    x[0] === r[0] ? <p className="px-5 my-2" style={{ backgroundColor: "#FAFAFA"}}>{r[2]}: {r[1]}</p>: <p></p>
+                  ))}
+                  <form>
+                    <MDBInput
+                      wrapperClass="mb-4"
+                      textarea
+                      id="Answer"
+                      rows={4}
+                      label="Answer"
+                      onChange={(e) => {
+                        setAnswer(e.target.value);
+                        setQid(x[0]);
+                      }}
+                    />
+                    <MDBBtn className="mb-4" onClick={postResponse} block>
+                      Post
+                    </MDBBtn>
+                  </form>
+                </div>
+              ))}
+          </div>
+        {/* <form>
           <MDBInput
             wrapperClass="mb-4"
             textarea
@@ -101,7 +101,7 @@ function ExpertForum(props) {
           <MDBBtn className="mb-4" onClick={postQuestion} block>
             Post
           </MDBBtn>
-        </form>
+        </form> */}
       </MDBContainer>
     </div>
   );

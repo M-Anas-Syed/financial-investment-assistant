@@ -28,6 +28,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsRegressor
+from django.core.mail import send_mail
 
 
 # api_key = 'WSKWF8OYUKBBJ4WT'
@@ -204,7 +205,32 @@ class Action(APIView):
                     return HttpResponse('DOES NOT EXIST')
                 # data['value'] = temp + (float(data['stock_price']) * float(data['stock_quantity']))
                 # serializer = PortfolioSerializer(data=data)
-
+            elif request.data.get('action') == 'Buy':
+                data = request.data
+                ticker = request.data.get('stock_symbol')
+                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey='+api_key
+                r = requests.get(url)
+                stockpri = r.json()
+                data['stock_price'] = stockpri['Global Quote']['05. price']
+                temp = AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
+                updateVal = temp[0].account_value - (float(data['stock_price']) * float(data['stock_quantity']))
+                if Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).filter(stock_symbol=ticker):
+                    entered_quan = data['stock_quantity']
+                    curr_quan = Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).filter(stock_symbol=ticker).get().stock_quantity
+                    # if int(data['stock_quantity']) > curr_quan:
+                    #     return HttpResponse('You do not own enough quantity')
+                    # else:
+                    data['stock_quantity'] = str(int(curr_quan) + int(entered_quan))
+                    # if int(data['stock_quantity']) > 0:
+                    port_serializer = PortfolioSerializer(Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).filter(stock_symbol=ticker).get(),data={'stock_quantity':data['stock_quantity']}, partial=True)
+                    port_serializer.is_valid(raise_exception=True)
+                    port_serializer.save()
+                    acc_serializer = AccountOverviewSerializer(AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).get(), data={'account_value':updateVal}, partial=True)
+                    acc_serializer.is_valid(raise_exception=True)
+                    acc_serializer.save()
+                    return HttpResponse('EXISTS')
+                else:
+                    return HttpResponse('DOES NOT EXIST')
 
 class PortfolioView(APIView):
     serializer_portfolio = PortfolioSerializer
@@ -319,8 +345,9 @@ class ForumQuestions(APIView):
                 temp = []
                 temp.append(i['id'])
                 temp.append(i['question'])
+                temp.append(User.objects.filter(id=i['user_id']).get().username)
                 quesList.append(temp)
-            print(quesList)
+            # print(quesList)
 
             return Response({'questions': quesList}, status=status.HTTP_200_OK)
 
@@ -343,11 +370,12 @@ class ForumAnswers(APIView):
             resList = []
             for i in a:
                 temp = []
-                print(i)
+                # print(i)
                 temp.append(i['belongs_to_id'])
                 temp.append(i['response'])
+                temp.append(User.objects.filter(id=i['user_id']).get().username)
                 resList.append(temp)
-            print(resList)
+            # print(resList)
 
             return Response({'response': resList}, status=status.HTTP_200_OK)
 
@@ -359,3 +387,39 @@ class ForumAnswers(APIView):
                 forum_serializer.save(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
                 return Response(forum_serializer.data, status=status.HTTP_201_CREATED)
             return Response(forum_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordReset(APIView):
+
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            email = request.data.get('resetEmail')
+            userid = User.objects.filter(username=email).get().id
+            # print(user)
+            link = "http://localhost:3000/newpassword/" + str(userid)
+            msg = "This email is being sent because you have requested to reset your password, please click on the following link to reset your password: " + link
+            send_mail(
+                'Password Reset',
+                msg,
+                'manasafzal123@gmail.com',
+                [email],
+                fail_silently=False,
+            )
+            return HttpResponse("Password reset email sent")
+
+    def put(self, request, *args, **kwargs):
+        if request.method == 'PUT':   
+            data = request.data 
+            userid = data.get('userid')
+            password = data.get('password')
+
+            # user_serializer = UserSerializer(User.objects.filter(id=userid).get(),data={'password':password},partial=True)
+            # user_serializer.is_valid(raise_exception=True)
+            # user_serializer.save()
+            u = User.objects.filter(id=userid).get()
+            u.set_password(password)
+            u.save()
+
+            return HttpResponse("Password updated successfully")
+
+

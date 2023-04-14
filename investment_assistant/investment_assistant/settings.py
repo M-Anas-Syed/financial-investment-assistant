@@ -140,3 +140,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'fia-frontend/build/static')
 ]
 
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = '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'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True

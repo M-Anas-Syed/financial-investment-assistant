@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { MDBTable, MDBTableHead, MDBTableBody } from "mdb-react-ui-kit";
+import { MDBTable, MDBTableHead, MDBTableBody, MDBBtn } from "mdb-react-ui-kit";
 import Axios from "axios";
 import Plot from "react-plotly.js";
+import { useNavigate } from "react-router-dom";
 
 function Portfolio() {
   const [symbol, setSymbol] = useState({});
@@ -11,6 +12,8 @@ function Portfolio() {
   const [accountValue, setAccountValue] = useState(0);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [purchaseDate, setPurchaseDate] = useState(0);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     Axios.get("http://127.0.0.1:8000/portfolio").then((response) => {
@@ -24,6 +27,38 @@ function Portfolio() {
       setPurchaseDate(response.data.purchase_date);
     });
   }, []);
+
+  const buy = (event, action, symbol) => {
+    event.preventDefault();
+    console.log(action)
+    if (action == "Buy") {
+      Axios.put("http://127.0.0.1:8000/buy", {
+        stock_symbol: symbol,
+        action: action,
+        stock_quantity: 1,
+      })
+        .then((response) => {
+          console.log(response.data);
+          navigate("/");
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else if(action == "Sell"){
+      Axios.put("http://127.0.0.1:8000/buy", {
+        stock_symbol: symbol,
+        action: action,
+        stock_quantity: 1,
+      })
+        .then((response) => {
+          console.log(response.data);
+          navigate("/");
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  };
 
   return (
     <div>
@@ -56,29 +91,34 @@ function Portfolio() {
         </MDBTableHead>
         <MDBTableBody>
           <td>
-            {/* <th scope="row">{symbol}</th>
-            <td>{price}</td>
-            <td>{quantity}</td>
-            <td>{total}</td> */}
-            {symbol.length > 0 && symbol.map((x) => <tr scope="row">{x}</tr>)}
+            {symbol.length > 0 && symbol.map((x) => <tr scope="row"><td className="py-2">{x}</td></tr>)}
           </td>
           <td>
             {purchaseDate.length > 0 &&
-              purchaseDate.map((x) => <tr scope="row">{x}</tr>)}
+              purchaseDate.map((x) => <tr scope="row"><td className="py-2">{x}</td></tr>)}
           </td>
           <td>
-            {price.length > 0 && price.map((x) => <tr scope="row">{x}</tr>)}
+            {price.length > 0 && price.map((x) => <tr scope="row"><td className="py-2">{x}</td></tr>)}
           </td>
-          {/* <td>
-            {currentPrice.length > 0 &&
-              currentPrice.map((x) => <tr scope="row">{x}</tr>)}
-          </td> */}
           <td>
             {quantity.length > 0 &&
-              quantity.map((x) => <tr style={{align:"center"}} scope="row">{x}</tr>)}
+              quantity.map((x) => (
+                <tr style={{ align: "center" }} scope="row">
+                  <td className="py-2">{x}</td>
+                </tr>
+              ))}
           </td>
           <td>
-            {total.length > 0 && total.map((x) => <tr scope="row">{x}</tr>)}
+            {total.length > 0 && total.map((x) => <tr scope="row"><td className="py-2">{x}</td></tr>)}
+          </td>
+          <td>
+            {symbol.length > 0 &&
+              symbol.map((x) => (
+                <tr>
+                  <button className="bg-success text-light" style={{margin: "0.35rem 0.5rem"}} onClick={(e) => {buy(e, 'Buy',x)}}>Quick Buy</button>
+                  <button className="bg-danger text-light" style={{margin: "0.35rem 0.5rem"}} onClick={(e) => {buy(e, 'Sell',x)}}>Quick Sell</button>
+                </tr>
+              ))}
           </td>
         </MDBTableBody>
       </MDBTable>

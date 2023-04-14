@@ -30,6 +30,6 @@ urlpatterns = [
     path('allportfolios', views.AllPortfolios.as_view(), name='allportfolios'),
     path('forumquestion', views.ForumQuestions.as_view(), name='forumquestion'),
     path('forumresponse', views.ForumAnswers.as_view(), name='forumresponse'),
-
+    path('resetpassword', views.PasswordReset.as_view(), name='resetpassword')
 ]
 

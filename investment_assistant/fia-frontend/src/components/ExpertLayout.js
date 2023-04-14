@@ -53,9 +53,6 @@ const ExpertLayout = () => {
                 <MDBNavbarLink href="#">Help Forum</MDBNavbarLink>
               </MDBNavbarItem>
               <MDBNavbarItem>
-                <MDBNavbarLink href="#">User Rankings</MDBNavbarLink>
-              </MDBNavbarItem>
-              <MDBNavbarItem>
                 <p className="text-light bg-dark m-0">Expert</p>
               </MDBNavbarItem>
               <MDBBtn
