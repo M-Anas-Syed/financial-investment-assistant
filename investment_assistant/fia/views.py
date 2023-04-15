@@ -28,6 +28,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import RandomForestRegressor
 from django.core.mail import send_mail
 
 
@@ -50,7 +51,7 @@ def algorithm(stock):
     data.dropna(inplace=True)
 
     #creating the algorithm
-    k = 5
+    # k = 5
 
     # defining the predictor variables
     X = data[['Close', 'Volume']]
@@ -59,16 +60,19 @@ def algorithm(stock):
     y = data['Returns']
 
     # creating the KNN model
-    knn = KNeighborsRegressor(n_neighbors=k)
+    # knn = KNeighborsRegressor(n_neighbors=k)
 
     # fit the model
-    knn.fit(X, y)
+    # knn.fit(X, y)
+
+    rf = RandomForestRegressor(n_jobs=-1, oob_score=True, n_estimators=100)
+    rf.fit(X, y)    
 
     # predict the future price of the stock
     future_data, _ = ts.get_monthly(symbol=str(stock))
     future_close = float(future_data.iloc[0]['4. close'])
     future_volume = int(future_data.iloc[0]['5. volume'])
-    future_returns = knn.predict([[future_close, future_volume]])
+    future_returns = rf.predict([[future_close, future_volume]])
     future_price = future_close * np.exp(future_returns)
 
     return future_price
