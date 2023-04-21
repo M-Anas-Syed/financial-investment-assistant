@@ -59,13 +59,13 @@ const Layout = () => {
                 <MDBNavbarLink href="askexpert">Ask an Expert</MDBNavbarLink>
               </MDBNavbarItem>
               <MDBNavbarItem>
-                <p className='text-light bg-dark m-0'>User</p>
+                <span className='text-light bg-dark m-0'>User</span>
               </MDBNavbarItem>
               <MDBBtn
                 onClick={signout}
                 outline
                 color="light"
-                className="bg-danger"
+                className="bg-danger mx-1"
                 size="sm"
                 type="button"
               >

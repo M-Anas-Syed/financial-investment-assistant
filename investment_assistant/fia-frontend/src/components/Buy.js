@@ -8,7 +8,7 @@ import {
   MDBBtn,
   MDBContainer,
   MDBSelect,
-  MDBTable, MDBTableHead, MDBTableBody
+  MDBTable, MDBTableHead, MDBTableBody,MDBSpinner, MDBListGroup, MDBListGroupItem
 } from "mdb-react-ui-kit";
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 import Chart from "react-google-charts";
@@ -26,14 +26,16 @@ function Buy() {
   const [symbol, setSymbol] = useState("");
   const [action, setAction] = useState("Buy");
   const [quantity, setQuantity] = useState(0);
-  const [items, setItems] = useState("");
-  const [dates, setDates] = useState({});
-  const [close, setClose] = useState({});
-  const [volume, setVolume] = useState(0);
-  const [high, setHigh] = useState(0);
-  const [low, setLow] = useState(0);
+  const [items, setItems] = useState('');
+  const [dates, setDates] = useState([]);
+  const [open, setOpen] = useState([]);
+  const [close, setClose] = useState([]);
+  const [volume, setVolume] = useState({});
+  const [high, setHigh] = useState([]);
+  const [low, setLow] = useState([]);
   const [price, setPrice] = useState(0);
   const [prediction, setPrediction] = useState("");
+  const [lisData, setLisData] = useState([]);
 
 
   const buy = (event) => {
@@ -81,19 +83,25 @@ function Buy() {
     });
   }
 
-  const chart_data = async (S) => {
-    await Axios.post("http://127.0.0.1:8000/chart", {
+  var data;
+
+  const chart_data = (S) => {
+    // setTimeout(() => {
+    Axios.post("http://127.0.0.1:8000/chart", {
       symbol: S
     })
     .then((response) => {
-      console.log(response.data.chart_date);
+      console.log(response.data.open);
       setDates(response.data.chart_date);
+      setOpen(response.data.open);
       setClose(response.data.chart_close);
       setVolume(response.data.volume);
       setHigh(response.data.high);
       setLow(response.data.low);
       setPrice(response.data.curr_price);
       setPrediction(response.data.prediction);
+
+      setLisData(response.data.lisData);
     })
     .catch((error) => {
       console.log(error);
@@ -102,12 +110,11 @@ function Buy() {
 
 
   const handleOnSearch = (string, results) => {
-    // onSearch will have as the first callback parameter
-    // the string searched and for the second the results.
-    console.log("searched");
-    console.log(string);
-    stock_search(string);
+      console.log("searched");
+      console.log(string);
+      stock_search(string);
   }
+
 
   const handleOnHover = (result) => {
     // the item hovered
@@ -130,11 +137,41 @@ function Buy() {
     console.log('Cleared');
   }
 
+  // const dataPreprocessing = (dates, open, low, close, high) =>{
+  //   let lisData = [["Year","","","",""]];
+  //   for(let i = 0; i < dates.length; i ++){
+  //     let temp = [];
+  //     temp.push(dates[i]);
+  //     temp.push(open[i]);
+  //     temp.push(low[i]);
+  //     temp.push(close[i]);
+  //     temp.push(high[i]);
+  //     lisData.push(temp);
+  //   }
+  //   return lisData;
+  // }
+
+  // const data = dataPreprocessing(dates, open, low, close, high);
+
+  const options = {
+    legend: "none",
+    explorer: { 
+      actions: ['dragToZoom', 'rightClickToReset'],
+      axis: 'horizontal',
+      keepInBounds: true,
+      maxZoomIn: 4.0},
+      series: {
+        1: {type: 'line'}
+      }
+  
+  }
+
+
   return (
     <div>
       <MDBContainer className="p-3 my-5 d-flex flex-column ">
         <form>
-
+          {console.log(items)}
           <ReactSearchAutocomplete
             items={items}
             onSearch={handleOnSearch}
@@ -143,11 +180,28 @@ function Buy() {
             onFocus={handleOnFocus}
             onClear={handleOnClear}
             autoFocus
-            
           />
+          {/* <div style={{display: 'flex', width: '100%'}}>
+          <div className="w-100 position-relative">
+          <MDBInput
+            wrapperClass="w-100"
+            label="Symbol Ex: IBM"
+              type="text"
+              style={{width:'100%'}}
+              onChange={(e) => {
+                setSymbol(e.target.value)
+              }}
+            />
+            <MDBListGroup className="position-absolute" style={{ minWidthL: '22rem', zIndex: '5' }} light>
+              {items.length > 0 && items.map((x) => <MDBListGroupItem>{x['name']}</MDBListGroupItem>)}
+            </MDBListGroup>
+            </div>
+            <MDBBtn onClick={stock_search}>Search</MDBBtn>
+          </div> */}
+          
           <p>{prediction}</p>
           <div style={{display: 'flex', width: '100%'}}>
-          
+          {/* {console.log(lisData)} */}
           <MDBTable>
             <MDBTableHead>
             <tr>
@@ -159,10 +213,10 @@ function Buy() {
             </tr>
             </MDBTableHead>
             <MDBTableBody>
-                  <td><tr scope="row">{volume}</tr></td>
+                  {/* <td><tr scope="row">{volume}</tr></td>
                   <td><tr scope="row">{high}</tr></td>
                   <td><tr scope="row">{low}</tr></td>
-                  <td><tr scope="row">{price}</tr></td>
+                  <td><tr scope="row">{price}</tr></td> */}
             </MDBTableBody>
           </MDBTable>
             <Plot
@@ -177,6 +231,15 @@ function Buy() {
               layout={{width: 800, height: 500, title:'', xaxis:{title:"Timeline"}, yaxis:{title:"Value"}} }
               style={{ position: 'relative', zIndex: '-2', marginTop:'20px'}}
               />
+
+            <Chart
+              chartType="CandlestickChart"
+              width="900px"
+              height="500px"
+              data={lisData}
+              options={options}
+            />
+              
             </div>
           
           {/* <MDBInput

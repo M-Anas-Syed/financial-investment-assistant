@@ -20,6 +20,8 @@ import {
 } from "mdb-react-ui-kit";
 import Cookies from "js-cookie";
 import { redirect } from "react-router-dom";
+import Alert from "react-bootstrap/Alert";
+import Button from "react-bootstrap/Button";
 
 function Register() {
   Axios.defaults.withCredentials = true;
@@ -37,26 +39,50 @@ function Register() {
 
   const [resetEmail, setResetEmail] = useState("");
 
+  const [show, setShow] = useState(true);
+  const [errors, setErrors] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [msg, setMsg] = useState([]);
+
   const navigate = useNavigate();
 
   const toggleShow = () => setBasicModal(!basicModal);
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if(passwordReg == confirmPasswordReg){
+    if (passwordReg == confirmPasswordReg) {
+      if (/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/.test(usernameReg)) {
         Axios.post("http://127.0.0.1:8000/register", {
-        username: usernameReg,
-        password: passwordReg,
+          username: usernameReg,
+          password: passwordReg,
         })
-        .then((response) => {
+          .then((response) => {
             console.log(response.data);
             navigate(0);
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-    }else{
-        console.log("The passwords do not match!");
+          })
+          .catch((error) => {
+            let error_msgs = [];
+            if ("username" in error.response.data) {
+              error_msgs.push("Email: " + error.response.data["username"][0]);
+            }
+            if ("password" in error.response.data) {
+              console.log(error.response.data["password"]);
+              error_msgs.push(
+                "Password: " + error.response.data["password"][0]
+              );
+            }
+            setMsg(error_msgs);
+            setErrors(true);
+            // setMsg(error);
+          });
+      } else {
+        setErrors(true);
+        setMsg(["Please enter a valid email!"]);
+      }
+    } else {
+      setErrors(true);
+      setMsg(["The passwords do not match!"]);
+      // setErrors("The passwords you entered do not match!");
     }
   };
 
@@ -80,7 +106,9 @@ function Register() {
         navigate("/");
       })
       .catch((error) => {
-        console.log(error);
+        console.log(error.response.data);
+        setMsg(["Invalid email or password!"]);
+        setErrors(true);
       });
   };
 
@@ -95,20 +123,22 @@ function Register() {
 
   const passwordResetForm = async () => {
     await Axios.post("http://127.0.0.1:8000/resetpassword", {
-    "resetEmail": resetEmail
+      resetEmail: resetEmail,
     })
       .then((response) => {
         console.log(response.data);
       })
       .catch((error) => {
         console.log(error);
+        
+        setErrors(true);
       });
-  }
+  };
 
-//   const passwordValidation = (e) =>{
-//     setPasswordReg(e.target.value);
-//     if()
-//   }
+  //   const passwordValidation = (e) =>{
+  //     setPasswordReg(e.target.value);
+  //     if()
+  //   }
 
   return (
     <div>
@@ -139,6 +169,18 @@ function Register() {
 
       <MDBTabsContent className="p-3 my-5 d-flex flex-column w-50 mx-auto">
         <MDBTabsPane show={justifyActive === "tab1"}>
+          {errors == true && (
+              <Alert
+                variant="danger"
+                onClose={() => setErrors(false)}
+                dismissible
+              >
+                <Alert.Heading>Oh snap! You got an error!</Alert.Heading>
+                {msg.map((x) => (
+                  <p>{x}</p>
+                ))}
+              </Alert>
+            )}
           <MDBInput
             wrapperClass="mb-4"
             label="Email"
@@ -155,7 +197,12 @@ function Register() {
               setPasswordLogin(e.target.value);
             }}
           />
-          <a wrapperClass="mb-4" href="#" onClick={toggleShow} className="text-right">
+          <a
+            wrapperClass="mb-4"
+            href="#"
+            onClick={toggleShow}
+            className="text-right"
+          >
             Forgot Password?
           </a>
 
@@ -163,15 +210,26 @@ function Register() {
             <MDBModalDialog>
               <MDBModalContent>
                 <MDBModalHeader>
-                  <MDBModalTitle>Enter your email address</MDBModalTitle>
+                  <MDBModalTitle>Forgot your Password?</MDBModalTitle>
+
                   <MDBBtn
                     className="btn-close"
                     color="none"
                     onClick={toggleShow}
                   ></MDBBtn>
                 </MDBModalHeader>
+                <MDBModalBody>
+                  <p>Enter your email address. If an account has been registered, an email will be sent to reset your password.</p>
+                  <MDBInput
+                    wrapperClass="m-4"
+                    label="Email"
+                    type="email"
+                    onChange={(e) => {
+                      setResetEmail(e.target.value);
+                    }}
+                  />
+                </MDBModalBody>
                 
-                <MDBInput wrapperClass="m-4" label="Email" type="email"  onChange={(e) => {setResetEmail(e.target.value)}}/>
                 <MDBModalFooter>
                   <MDBBtn color="secondary" onClick={toggleShow}>
                     Close
@@ -198,35 +256,57 @@ function Register() {
         </MDBTabsPane>
 
         <MDBTabsPane show={justifyActive === "tab2"}>
-          <MDBInput
-            wrapperClass="mb-4"
-            label="Email"
-            type="email"
-            onChange={(e) => {
-              setUsernameReg(e.target.value);
-            }}
-          />
-          {/* <MDBInput wrapperClass='mb-4' label='Email' type='email'  onChange={handleInputChange}/> */}
-          <MDBInput
-            wrapperClass="mb-4"
-            label="Password"
-            type="password"
-            onChange={(e) => {
-                setConfirmPasswordReg(e.target.value);
-            }}
-          />
-          <MDBInput
-            wrapperClass="mb-4"
-            label="Confirm Password"
-            type="password"
-            onChange={(e) => {
-              setPasswordReg(e.target.value);
-            }}
-          />
+          {errors == true && (
+            <Alert
+              variant="danger"
+              onClose={() => setErrors(false)}
+              dismissible
+            >
+              <Alert.Heading>Oh snap! You got an error!</Alert.Heading>
+              {msg.map((x) => (
+                <p>{x}</p>
+              ))}
+            </Alert>
+          )}
+          <form>
+            <div className="invalid-feedback">
+              Please provide a valid Email address.
+            </div>
+            <MDBInput
+              wrapperClass="mb-4"
+              label="Email *"
+              type="email"
+              name="email"
+              onChange={(e) => {
+                setUsernameReg(e.target.value);
+              }}
+              required="true"
+            />
 
-          <MDBBtn className="mb-4 w-100" onClick={handleSubmit}>
-            Sign up
-          </MDBBtn>
+            <MDBInput
+              wrapperClass="mb-4"
+              label="Password *"
+              type="password"
+              onChange={(e) => {
+                setConfirmPasswordReg(e.target.value);
+              }}
+              required="true"
+            />
+
+            <MDBInput
+              wrapperClass="mb-4"
+              label="Confirm Password *"
+              type="password"
+              onChange={(e) => {
+                setPasswordReg(e.target.value);
+              }}
+              required="true"
+            />
+
+            <MDBBtn className="mb-4 w-100" onClick={handleSubmit} type="submit">
+              Sign up
+            </MDBBtn>
+          </form>
 
           <p className="text-center">
             Already have an account?{" "}

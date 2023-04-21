@@ -30,11 +30,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor
 from django.core.mail import send_mail
+from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 
-
-# api_key = 'WSKWF8OYUKBBJ4WT'
-# api_key = 'BHK6SSOLPWK5SLRA'
-api_key = 'DVL6M8JDONPF1DU1'
+api_key = 'WSKWF8OYUKBBJ4WT'
 
 def algorithm(stock):
     ts = TimeSeries(key=api_key, output_format='pandas')
@@ -50,9 +49,6 @@ def algorithm(stock):
     data['Returns'] = np.log(data['Close']) - np.log(data['Close'].shift(1))
     data.dropna(inplace=True)
 
-    #creating the algorithm
-    # k = 5
-
     # defining the predictor variables
     X = data[['Close', 'Volume']]
 
@@ -60,12 +56,9 @@ def algorithm(stock):
     y = data['Returns']
 
     # creating the KNN model
-    # knn = KNeighborsRegressor(n_neighbors=k)
+    rf = RandomForestRegressor(n_jobs=-1, oob_score=True, n_estimators=100)
 
     # fit the model
-    # knn.fit(X, y)
-
-    rf = RandomForestRegressor(n_jobs=-1, oob_score=True, n_estimators=100)
     rf.fit(X, y)    
 
     # predict the future price of the stock
@@ -89,6 +82,7 @@ class RegisterView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = serializer.save()
         user.set_password(user.password)
         group = Group.objects.get(name='Customer')
@@ -102,6 +96,7 @@ class RegisterView(APIView):
         user.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
 
 
 class LoginView(APIView):
@@ -291,22 +286,92 @@ class Chart(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data 
         ticker = request.data.get('symbol')
+
+        #1 YEAR
         url = 'https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol='+str(ticker)+'&apikey='+api_key
         r = requests.get(url)
         data = r.json()
-        print(data['Monthly Time Series'])
+        print(1)
+        open = []
         volume = list(data['Monthly Time Series'].items())[0][1]['5. volume']
-        high = list(data['Monthly Time Series'].items())[0][1]['2. high']
-        low = list(data['Monthly Time Series'].items())[0][1]['3. low']
+        high = []
+        low = []
         curr_price = list(data['Monthly Time Series'].items())[0][1]['4. close']
         date = []
         close = []
+        count = 0
         for i in data['Monthly Time Series']:
+            if count == 12:
+                break
             date.append(i)
             close.append(data['Monthly Time Series'][i]['4. close'])
+            open.append(data['Monthly Time Series'][i]['1. open'])
+            high.append(data['Monthly Time Series'][i]['2. high'])
+            low.append(data['Monthly Time Series'][i]['3. low'])
+            count += 1
+
+        # #1 MONTH
+        # url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol='+str(ticker)+'&apikey='+api_key
+        # r = requests.get(url)
+        # data = r.json()
+        # print(1)
+        # open = []
+        # volume = list(data['Time Series (Daily)'].items())[0][1]['5. volume']
+        # high = []
+        # low = []
+        # curr_price = list(data['Time Series (Daily)'].items())[0][1]['4. close']
+        # date = []
+        # close = []
+        # count = 0
+        # for i in data['Time Series (Daily)']:
+        #     if count == 31:
+        #         break
+        #     date.append(i)
+        #     close.append(data['Time Series (Daily)'][i]['4. close'])
+        #     open.append(data['Time Series (Daily)'][i]['1. open'])
+        #     high.append(data['Time Series (Daily)'][i]['2. high'])
+        #     low.append(data['Time Series (Daily)'][i]['3. low'])
+        #     count += 1
+
+        #1 day
+        # url = 'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol='+str(ticker)+'&interval=60min&apikey='+api_key
+        # r = requests.get(url)
+        # data = r.json()
+        # print(data)
+        # open = []
+        # volume = list(data['Time Series (60min)'].items())[0][1]['5. volume']
+        # high = []
+        # low = []
+        # curr_price = list(data['Time Series (60min)'].items())[0][1]['4. close']
+        # date = []
+        # close = []
+        # count = 0
+        # for i in data['Time Series (60min)']:
+        #     if count == 24:
+        #         break
+        #     date.append(i)
+        #     close.append(data['Time Series (60min)'][i]['4. close'])
+        #     open.append(data['Time Series (60min)'][i]['1. open'])
+        #     high.append(data['Time Series (60min)'][i]['2. high'])
+        #     low.append(data['Time Series (60min)'][i]['3. low'])
+        #     count += 1
+
+        lisData = []
+        for i in range(0, len(date)):
+            temp = []
+            temp.append(date[i])
+            temp.append(float(low[i]))
+            temp.append(float(open[i]))
+            temp.append(float(close[i]))
+            temp.append(float(high[i]))
+            lisData.insert(0,temp)
+        
+        lisData.insert(0,['Year', 'low', 'open', 'close', 'high'])
 
         future_price = algorithm(ticker)
         prediction = ''
+        print(open)
+
 
         if future_price > float(curr_price):
             prediction = 'It would be a good decision to buy this stock!'
@@ -314,7 +379,8 @@ class Chart(APIView):
             prediction = 'It would be better to hold or sell this stock if you have invested!'
 
         print(prediction)
-        return Response({'chart_date': date, 'chart_close': close, 'volume': volume, 'high': high, 'low': low, 'curr_price': curr_price, 'prediction': prediction},status=status.HTTP_200_OK)
+        return Response({'lisData': lisData,'chart_date': date, 'chart_close': close, 'open': open, 'volume': volume, 'high': high, 'low': low, 'curr_price': curr_price, 'prediction': prediction},status=status.HTTP_200_OK)
+        # return Response({'lisData': lisData, 'curr_price': curr_price, 'prediction': prediction},status=status.HTTP_200_OK)
 
 
 class AllPortfolios(APIView):
@@ -398,18 +464,24 @@ class PasswordReset(APIView):
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
             email = request.data.get('resetEmail')
-            userid = User.objects.filter(username=email).get().id
-            # print(user)
-            link = "http://localhost:3000/newpassword/" + str(userid)
-            msg = "This email is being sent because you have requested to reset your password, please click on the following link to reset your password: " + link
-            send_mail(
-                'Password Reset',
-                msg,
-                'manasafzal123@gmail.com',
-                [email],
-                fail_silently=False,
-            )
-            return HttpResponse("Password reset email sent")
+            try:
+                userid = User.objects.filter(username=email).get().id
+                # print(user)
+                link = "http://localhost:3000/newpassword/" + str(userid)
+                msg = "This email is being sent because you have requested to reset your password, please click on the following link to reset your password: " + link
+                send_mail(
+                    'Password Reset',
+                    msg,
+                    'manasafzal123@gmail.com',
+                    [email],
+                    fail_silently=False,
+                )
+                return Response({"userid":userid},status=status.HTTP_200_OK)
+            except ObjectDoesNotExist:
+                return HttpResponse("User with this email does not exist")
+            except Exception as e:
+                return HttpResponse("An error occurred while processing your request")
+
 
     def put(self, request, *args, **kwargs):
         if request.method == 'PUT':   
