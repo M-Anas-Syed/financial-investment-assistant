@@ -20,7 +20,7 @@ class AccountOverviewSerializer(serializers.ModelSerializer):
 class ForumQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ForumQuestion
-        fields = ('id', 'user', 'question', 'date_created')
+        fields = ('id', 'user', 'question', 'date_created', 'answered')
 
 class ForumResponseSerializer(serializers.ModelSerializer):
     class Meta:

@@ -14,6 +14,7 @@ import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 import Chart from "react-google-charts";
 import Plot from 'react-plotly.js';
 import { useNavigate } from "react-router-dom";
+import Alert from "react-bootstrap/Alert";
 
 
 function Buy() {
@@ -37,36 +38,44 @@ function Buy() {
   const [prediction, setPrediction] = useState("");
   const [lisData, setLisData] = useState([]);
 
+  const [errors, setErrors] = useState(false);
+  const [msg, setMsg] = useState("");
+
 
   const buy = (event) => {
     event.preventDefault();
-    console.log(action)
-    if (action == "Buy") {
-      Axios.post("http://127.0.0.1:8000/buy", {
-        stock_symbol: symbol,
-        action: action,
-        stock_quantity: quantity,
-      })
-        .then((response) => {
-          console.log(response.data);
-          navigate("/");
+    console.log(action);
+    if(quantity > 0 && quantity < 501){
+      if (action == "Buy") {
+        Axios.post("http://127.0.0.1:8000/buy", {
+          stock_symbol: symbol,
+          action: action,
+          stock_quantity: quantity,
         })
-        .catch((error) => {
-          console.log(error);
-        });
-    } else if(action == "Sell"){
-      Axios.put("http://127.0.0.1:8000/buy", {
-        stock_symbol: symbol,
-        action: action,
-        stock_quantity: quantity,
-      })
-        .then((response) => {
-          console.log(response.data);
-          navigate("/");
+          .then((response) => {
+            console.log(response.data);
+            navigate("/");
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      } else if(action == "Sell"){
+        Axios.put("http://127.0.0.1:8000/buy", {
+          stock_symbol: symbol,
+          action: action,
+          stock_quantity: quantity,
         })
-        .catch((error) => {
-          console.log(error);
-        });
+          .then((response) => {
+            console.log(response.data);
+            navigate("/");
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    }else{
+      setErrors(true);
+      setMsg("Please enter a valid quantity amount!");
     }
   };
 
@@ -258,6 +267,16 @@ function Buy() {
             <option value={"Buy"} selected>Buy</option>
             <option value={"Sell"}>Sell</option>
           </select>
+          {errors == true && (
+            <Alert
+              variant="danger"
+              onClose={() => setErrors(false)}
+              dismissible
+            >
+              <Alert.Heading>Oh snap! You got an error!</Alert.Heading>
+              {msg}
+            </Alert>
+          )}
           <MDBInput
             wrapperClass="mb-4"
             label="Quantity"

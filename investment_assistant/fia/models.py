@@ -35,6 +35,7 @@ class ForumQuestion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     question = models.CharField(max_length=300, unique=True)
     date_created=models.DateTimeField(auto_now_add=True,null=True)
+    answered = models.BooleanField(default=False)
 
     def __str__(self):
         return self.question

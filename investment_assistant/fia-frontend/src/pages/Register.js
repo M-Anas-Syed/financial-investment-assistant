@@ -39,9 +39,7 @@ function Register() {
 
   const [resetEmail, setResetEmail] = useState("");
 
-  const [show, setShow] = useState(true);
   const [errors, setErrors] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [msg, setMsg] = useState([]);
 
   const navigate = useNavigate();
@@ -130,7 +128,7 @@ function Register() {
       })
       .catch((error) => {
         console.log(error);
-        
+
         setErrors(true);
       });
   };
