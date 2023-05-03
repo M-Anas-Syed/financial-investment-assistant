@@ -1,37 +1,28 @@
 from django.shortcuts import render
-from django.views import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.http import JsonResponse
-from rest_framework import generics, status
+from rest_framework import status
 from .serializers import UserSerializer, PortfolioSerializer, AccountOverviewSerializer, ForumQuestionSerializer, ForumResponseSerializer
-from rest_framework import viewsets
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import login, logout
-from rest_framework.authtoken.models import Token
-from django.views.decorators.csrf import csrf_protect
 from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.urls import reverse
 from django.contrib.auth.models import Group, AnonymousUser
 from django.contrib.auth.models import User
 import requests
-import json
 from alpha_vantage.timeseries import TimeSeries
 from datetime import date
 from .models import Portfolio, AccountOverview, ForumQuestion, ForumResponse
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor
 from django.core.mail import send_mail
-from rest_framework.exceptions import ValidationError
 from django.core.exceptions import ObjectDoesNotExist
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn import linear_model
+from scipy import stats
+import numpy as np
 
 api_key = 'WSKWF8OYUKBBJ4WT'
 
@@ -40,8 +31,7 @@ def algorithm(stock):
     data, meta_data = ts.get_monthly(symbol=str(stock))
 
     #preprocessing data
-    data = data.drop(columns=['1. open', '2. high', '3. low'])
-    data.rename(columns={'4. close': 'Close', '5. volume': 'Volume'}, inplace=True)
+    data.rename(columns={'4. close': 'Close', '5. volume': 'Volume','1. open': 'Open', '2. high': 'High', '3. low': 'Low'}, inplace=True)
     data.sort_index(inplace=True)
     data['Volume'] = pd.to_numeric(data['Volume'])
 
@@ -49,23 +39,46 @@ def algorithm(stock):
     data['Returns'] = np.log(data['Close']) - np.log(data['Close'].shift(1))
     data.dropna(inplace=True)
 
+    #Treat NaN values and infinite values
+    data['Returns'].fillna(data['Returns'].mean(), inplace=True)
+    data.replace([np.inf, -np.inf], [1e10, -1e10], inplace=True)
+
+    #Treat outliers
+    z = np.abs(stats.zscore(data[['Open', 'High', 'Low', 'Close', 'Volume', 'Returns']]))
+    threshold = 3.0
+    outliers = np.where(z > threshold)
+    data = data.drop(data.index[outliers[0]])
+
+    #Normalise the data
+    for col in ['Open', 'High', 'Low', 'Close', 'Volume', 'Returns']:
+        max_value = data[col].max()
+        min_value = data[col].min()
+        data[col] = (data[col] - min_value) / (max_value - min_value)
+
+    #Impute data
+    mice_imputer = IterativeImputer(estimator=linear_model.BayesianRidge(), n_nearest_features=None, imputation_order='ascending')
+    data[['Open', 'High', 'Low', 'Close', 'Volume', 'Returns']] = mice_imputer.fit_transform(data[['Open', 'High', 'Low', 'Close', 'Volume', 'Returns']])
+
     # defining the predictor variables
-    X = data[['Close', 'Volume']]
+    X = data[['Open', 'High', 'Low', 'Close', 'Volume']]
 
     # defining the target variable
     y = data['Returns']
 
-    # creating the KNN model
+    # creating the Random Forest model
     rf = RandomForestRegressor(n_jobs=-1, oob_score=True, n_estimators=100)
 
-    # fit the model
+    # train the model
     rf.fit(X, y)    
 
     # predict the future price of the stock
     future_data, _ = ts.get_monthly(symbol=str(stock))
     future_close = float(future_data.iloc[0]['4. close'])
     future_volume = int(future_data.iloc[0]['5. volume'])
-    future_returns = rf.predict([[future_close, future_volume]])
+    future_open = float(future_data.iloc[0]['1. open'])
+    future_high = float(future_data.iloc[0]['2. high'])
+    future_low = float(future_data.iloc[0]['3. low'])
+    future_returns = rf.predict([[future_open, future_high, future_low, future_close, future_volume]])
     future_price = future_close * np.exp(future_returns)
 
     return future_price
@@ -132,11 +145,6 @@ class LoginView(APIView):
 class Logout(APIView):
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
-            # logout(request)
-            # last_login_user = User.objects.filter(last_login__isnull=False).latest('last_login')
-            # groups = last_login_user.groups.all()
-            # role = groups[0]
-            # print(last_login_user)
             print(request.session.get('user_id'))
             logout(request)
             if isinstance(request.user, AnonymousUser):

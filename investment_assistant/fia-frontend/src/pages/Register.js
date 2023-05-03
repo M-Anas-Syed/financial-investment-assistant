@@ -71,7 +71,6 @@ function Register() {
             }
             setMsg(error_msgs);
             setErrors(true);
-            // setMsg(error);
           });
       } else {
         setErrors(true);
@@ -80,7 +79,6 @@ function Register() {
     } else {
       setErrors(true);
       setMsg(["The passwords do not match!"]);
-      // setErrors("The passwords you entered do not match!");
     }
   };
 
@@ -181,7 +179,7 @@ function Register() {
             )}
           <MDBInput
             wrapperClass="mb-4"
-            label="Email"
+            label="Email *"
             type="email"
             onChange={(e) => {
               setUsernameLogin(e.target.value);
@@ -189,7 +187,7 @@ function Register() {
           />
           <MDBInput
             wrapperClass="mb-4"
-            label="Password"
+            label="Password *"
             type="password"
             onChange={(e) => {
               setPasswordLogin(e.target.value);
@@ -220,7 +218,7 @@ function Register() {
                   <p>Enter your email address. If an account has been registered, an email will be sent to reset your password.</p>
                   <MDBInput
                     wrapperClass="m-4"
-                    label="Email"
+                    label="Email *"
                     type="email"
                     onChange={(e) => {
                       setResetEmail(e.target.value);

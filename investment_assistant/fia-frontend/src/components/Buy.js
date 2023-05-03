@@ -45,7 +45,7 @@ function Buy() {
   const buy = (event) => {
     event.preventDefault();
     console.log(action);
-    if(quantity > 0 && quantity < 501){
+    if(quantity > 0 && quantity < 1000){
       if (action == "Buy") {
         Axios.post("http://127.0.0.1:8000/buy", {
           stock_symbol: symbol,
@@ -95,7 +95,6 @@ function Buy() {
   var data;
 
   const chart_data = (S) => {
-    // setTimeout(() => {
     Axios.post("http://127.0.0.1:8000/chart", {
       symbol: S
     })

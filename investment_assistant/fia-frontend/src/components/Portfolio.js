@@ -23,7 +23,6 @@ function Portfolio() {
       setQuantity(response.data.stock_quantity);
       setTotal(response.data.total);
       setAccountValue(response.data.acc);
-      // setCurrentPrice(response.data.curr_price);
       setPurchaseDate(response.data.purchase_date);
     });
   }, []);
