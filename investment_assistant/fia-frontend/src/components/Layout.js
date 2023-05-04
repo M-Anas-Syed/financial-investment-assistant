@@ -58,8 +58,8 @@ const Layout = () => {
               <MDBNavbarItem>
                 <MDBNavbarLink href="askexpert">Ask an Expert</MDBNavbarLink>
               </MDBNavbarItem>
-              <MDBNavbarItem>
-                <span className='text-light bg-dark m-0'>User</span>
+              <MDBNavbarItem className="position-relative" style={{'width': '50px'}}>
+                <span className='text-light bg-dark m-0 position-absolute top-50 start-50 translate-middle px-2 py-1 rounded-5'>User</span>
               </MDBNavbarItem>
               <MDBBtn
                 onClick={signout}

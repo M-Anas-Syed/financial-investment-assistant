@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 class PortfolioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Portfolio
-        fields = ('id','user', 'stock_symbol', 'purchase_date', 'stock_price', 'stock_quantity')
+        fields = ('id','user', 'stock_symbol', 'purchase_date', 'stock_price', 'stock_quantity','account_value')
 
 class AccountOverviewSerializer(serializers.ModelSerializer):
     class Meta:

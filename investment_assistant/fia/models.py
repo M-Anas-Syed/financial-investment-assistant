@@ -14,6 +14,7 @@ class Portfolio(models.Model):
     stock_price = models.FloatField(default=0)
     stock_quantity = models.IntegerField(default=0)
     total_price = models.FloatField(default=0)
+    account_value= models.FloatField(default=10000.00)
 
     class Meta:
         constraints = [
@@ -25,7 +26,7 @@ class Portfolio(models.Model):
 
 class AccountOverview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-    account_value = models.FloatField(default=100000.00)
+    account_value = models.FloatField(default=10000.00)
 
     def __str__(self):
         return str(self.account_value)

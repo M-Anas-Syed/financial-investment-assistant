@@ -29,7 +29,7 @@ function PasswordReset(props) {
         }else{
             console.log("The passwords do not match!");
         }
-      };
+    };
 
     return (
         <div>

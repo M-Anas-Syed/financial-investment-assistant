@@ -17,6 +17,12 @@ import {
   MDBModalTitle,
   MDBModalBody,
   MDBModalFooter,
+  MDBNavbar,
+  MDBIcon,
+  MDBNavbarNav,
+  MDBNavbarToggler,
+  MDBCollapse,
+  MDBNavbarBrand,
 } from "mdb-react-ui-kit";
 import Cookies from "js-cookie";
 import { redirect } from "react-router-dom";
@@ -41,6 +47,8 @@ function Register() {
 
   const [errors, setErrors] = useState(false);
   const [msg, setMsg] = useState([]);
+
+  const [showNavRight, setShowNavRight] = useState(false);
 
   const navigate = useNavigate();
 
@@ -131,13 +139,34 @@ function Register() {
       });
   };
 
-  //   const passwordValidation = (e) =>{
-  //     setPasswordReg(e.target.value);
-  //     if()
-  //   }
-
   return (
     <div>
+      <MDBNavbar expand="lg" dark bgColor="primary">
+        <MDBContainer fluid>
+          <MDBNavbarBrand href="/register">
+            Financial Investment Assistant
+          </MDBNavbarBrand>
+
+          <MDBNavbarToggler
+            type="button"
+            data-target="#navbarRightAlignExample"
+            aria-controls="navbarRightAlignExample"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            onClick={() => setShowNavRight(!showNavRight)}
+          >
+            <MDBIcon icon="bars" fas />
+          </MDBNavbarToggler>
+
+          <MDBCollapse navbar show={showNavRight}>
+            <MDBNavbarNav
+              right
+              fullWidth={false}
+              className="mb-2 mb-lg-0"
+            ></MDBNavbarNav>
+          </MDBCollapse>
+        </MDBContainer>
+      </MDBNavbar>
       <MDBContainer className="p-3 my-5 d-flex flex-column w-50">
         <MDBTabs
           pills
@@ -166,17 +195,17 @@ function Register() {
       <MDBTabsContent className="p-3 my-5 d-flex flex-column w-50 mx-auto">
         <MDBTabsPane show={justifyActive === "tab1"}>
           {errors == true && (
-              <Alert
-                variant="danger"
-                onClose={() => setErrors(false)}
-                dismissible
-              >
-                <Alert.Heading>Oh snap! You got an error!</Alert.Heading>
-                {msg.map((x) => (
-                  <p>{x}</p>
-                ))}
-              </Alert>
-            )}
+            <Alert
+              variant="danger"
+              onClose={() => setErrors(false)}
+              dismissible
+            >
+              <Alert.Heading>Oh snap! You got an error!</Alert.Heading>
+              {msg.map((x) => (
+                <p>{x}</p>
+              ))}
+            </Alert>
+          )}
           <MDBInput
             wrapperClass="mb-4"
             label="Email *"
@@ -215,7 +244,10 @@ function Register() {
                   ></MDBBtn>
                 </MDBModalHeader>
                 <MDBModalBody>
-                  <p>Enter your email address. If an account has been registered, an email will be sent to reset your password.</p>
+                  <p>
+                    Enter your email address. If an account has been registered,
+                    an email will be sent to reset your password.
+                  </p>
                   <MDBInput
                     wrapperClass="m-4"
                     label="Email *"
@@ -225,7 +257,7 @@ function Register() {
                     }}
                   />
                 </MDBModalBody>
-                
+
                 <MDBModalFooter>
                   <MDBBtn color="secondary" onClick={toggleShow}>
                     Close

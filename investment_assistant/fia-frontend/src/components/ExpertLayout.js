@@ -52,8 +52,8 @@ const ExpertLayout = () => {
               <MDBNavbarItem>
                 <MDBNavbarLink href="#">Help Forum</MDBNavbarLink>
               </MDBNavbarItem>
-              <MDBNavbarItem>
-                <p className="text-light bg-dark m-0">Expert</p>
+              <MDBNavbarItem className="position-relative" style={{'width': '75px'}}>
+                <span className='text-light bg-dark m-0 position-absolute top-50 start-50 translate-middle px-2 py-1 rounded-5'>Expert</span>
               </MDBNavbarItem>
               <MDBBtn
                 onClick={signout}

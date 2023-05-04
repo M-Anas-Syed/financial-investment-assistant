@@ -21,6 +21,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn import linear_model
+from sklearn.model_selection import train_test_split
 from scipy import stats
 import numpy as np
 
@@ -65,11 +66,13 @@ def algorithm(stock):
     # defining the target variable
     y = data['Returns']
 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
     # creating the Random Forest model
     rf = RandomForestRegressor(n_jobs=-1, oob_score=True, n_estimators=100)
 
     # train the model
-    rf.fit(X, y)    
+    rf.fit(X_train,y_train)    
 
     # predict the future price of the stock
     future_data, _ = ts.get_monthly(symbol=str(stock))
@@ -171,13 +174,14 @@ class Action(APIView):
                 acc_serializer = AccountOverviewSerializer(AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).get(), data={'account_value':updateVal}, partial=True)
                 acc_serializer.is_valid(raise_exception=True)
                 acc_serializer.save()
+                data['account_value'] = round(updateVal,2)
                 # print(acc_serializer)
                 # temp.account_value = updateVal
                 # temp.save()
                 serializer = PortfolioSerializer(data=data)
                 if serializer.is_valid():
                     serializer.save(user=User.objects.filter(last_login__isnull=False).latest('last_login'))
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response({'success': 'You have successfully made the purchase'}, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
@@ -198,6 +202,7 @@ class Action(APIView):
                         return HttpResponse('You do not own enough quantity')
                     else:
                         data['stock_quantity'] = str(int(curr_quan) - int(entered_quan))
+                        data['account_value'] = round(updateVal,2)
                         if int(data['stock_quantity']) > 0:
                             port_serializer = PortfolioSerializer(Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).filter(stock_symbol=ticker).get(),data={'stock_quantity':data['stock_quantity']}, partial=True)
                             port_serializer.is_valid(raise_exception=True)
@@ -207,9 +212,9 @@ class Action(APIView):
                     acc_serializer = AccountOverviewSerializer(AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).get(), data={'account_value':updateVal}, partial=True)
                     acc_serializer.is_valid(raise_exception=True)
                     acc_serializer.save()
-                    return HttpResponse('EXISTS')
+                    return Response({'success': 'You have successfully sold the share'}, status=status.HTTP_200_OK)
                 else:
-                    return HttpResponse('DOES NOT EXIST')
+                    return Response({'fail': 'The transaction was not successfull!'}, status=status.HTTP_400_BAD_REQUEST)
                 # data['value'] = temp + (float(data['stock_price']) * float(data['stock_quantity']))
                 # serializer = PortfolioSerializer(data=data)
             elif request.data.get('action') == 'Buy':
@@ -228,16 +233,17 @@ class Action(APIView):
                     #     return HttpResponse('You do not own enough quantity')
                     # else:
                     data['stock_quantity'] = str(int(curr_quan) + int(entered_quan))
+                    data['account_value'] = round(updateVal,2)
                     # if int(data['stock_quantity']) > 0:
-                    port_serializer = PortfolioSerializer(Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).filter(stock_symbol=ticker).get(),data={'stock_quantity':data['stock_quantity']}, partial=True)
+                    port_serializer = PortfolioSerializer(Portfolio.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).filter(stock_symbol=ticker).get(),data={'stock_quantity':data['stock_quantity'],'account_value': data['account_value']}, partial=True)
                     port_serializer.is_valid(raise_exception=True)
                     port_serializer.save()
                     acc_serializer = AccountOverviewSerializer(AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login')).get(), data={'account_value':updateVal}, partial=True)
                     acc_serializer.is_valid(raise_exception=True)
                     acc_serializer.save()
-                    return HttpResponse('EXISTS')
+                    return Response({'success': 'You have successfully bought a share'}, status=status.HTTP_200_OK)
                 else:
-                    return HttpResponse('DOES NOT EXIST')
+                    return Response({'fail': 'The transaction was not successfull!'}, status=status.HTTP_400_BAD_REQUEST)
 
 class PortfolioView(APIView):
     serializer_portfolio = PortfolioSerializer
@@ -252,24 +258,28 @@ class PortfolioView(APIView):
             stkquantity = []
             total = []
             curr_price = []
+            acc_val = []
             for i in p:
                 syms.append(i.stock_symbol)
                 ticker = i.stock_symbol
-                # url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey='+api_key
-                # r = requests.get(url)
-                # stockpri = r.json()
-                # cur_pri = stockpri['Global Quote']['05. price']
-                # curr_price.append(cur_pri)
+                url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='+ticker+'&apikey='+api_key
+                r = requests.get(url)
+                stockpri = r.json()
+                cur_pri = stockpri['Global Quote']['05. price']
+                curr_price.append(float(cur_pri))
                 purchasedates.append(i.purchase_date)
                 stkprice.append(i.stock_price)
                 stkquantity.append(i.stock_quantity)
-                total.append(i.stock_price*i.stock_quantity)
+                total.append(round(i.stock_price*i.stock_quantity,2))
+                acc_val.append(i.account_value)
 
-            # print(cur_pri)
+            print(acc_val)
+            # print(stkprice)
+            # print(abs(charty))
             acc = AccountOverview.objects.filter(user=User.objects.filter(last_login__isnull=False).latest('last_login'))[0]
             # print(acc.account_value)
 
-            return Response({'symbol': syms, 'purchase_date':purchasedates, 'stock_price': stkprice, 'stock_quantity': stkquantity, 'total': total, 'acc':round(acc.account_value,2)}, status=status.HTTP_200_OK)
+            return Response({'symbol': syms, 'purchase_date':purchasedates, 'stock_price': stkprice, 'stock_quantity': stkquantity, 'curr_price': curr_price , 'acc_val': acc_val, 'total': total, 'acc':round(acc.account_value,2)}, status=status.HTTP_200_OK)
 
 
 class Search(APIView):
@@ -289,6 +299,7 @@ class Search(APIView):
             symbols.append(temp)
 
         return Response({'suggested_symbols': symbols}, status=status.HTTP_200_OK)
+
 
 class Chart(APIView):
     def post(self, request, *args, **kwargs):

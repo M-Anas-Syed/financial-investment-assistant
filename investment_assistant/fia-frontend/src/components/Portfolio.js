@@ -11,19 +11,23 @@ function Portfolio() {
   const [total, setTotal] = useState({});
   const [accountValue, setAccountValue] = useState(0);
   const [currentPrice, setCurrentPrice] = useState(0);
+  const [accVal, setAccVal] = useState(0);
   const [purchaseDate, setPurchaseDate] = useState(0);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     Axios.get("http://127.0.0.1:8000/portfolio").then((response) => {
-      console.log(response.data);
+      // console.log(response.data);
       setSymbol(response.data.symbol);
       setPrice(response.data.stock_price);
       setQuantity(response.data.stock_quantity);
       setTotal(response.data.total);
+      setCurrentPrice(response.data.curr_price);
+      setAccVal(response.data.accVal);
       setAccountValue(response.data.acc);
       setPurchaseDate(response.data.purchase_date);
+      console.log(response.data.accVal)
     });
   }, []);
 
@@ -61,18 +65,21 @@ function Portfolio() {
 
   return (
     <div>
+    {console.log(accVal)}
       <h3 className="text-center">Your Performance</h3>
       <Plot
         data={[
           {
             x: purchaseDate,
-            y: total,
-            fill: "tozeroy",
+            y: accVal,
             type: "scatter",
           },
         ]}
-        layout={{ width: 800, height: 500, title: "" }}
-        style={{ position: "relative", zIndex: "-2", marginTop: "20px" }}
+        layout={{ width: 800, height: 500, title: "" ,responsive: true}}
+        style={{ position: "relative", zIndex: "2", marginTop: "20px" }}
+        useResizeHandler={true}
+        displayModeBar= {true}
+        scrollZoom={true}
       />
 
       <h3 className="text-center">Your Portfolio</h3>
@@ -82,8 +89,8 @@ function Portfolio() {
           <tr>
             <th scope="col">Symbol</th>
             <th scope="col">Purchase Date</th>
-            <th scope="col">Price</th>
-            {/* <th scope="col">Current Price</th> */}
+            <th scope="col">Purchase Price</th>
+            <th scope="col">Current Price</th>
             <th scope="col">Quantity</th>
             <th scope="col">Total</th>
           </tr>
@@ -98,6 +105,9 @@ function Portfolio() {
           </td>
           <td>
             {price.length > 0 && price.map((x) => <tr scope="row"><td className="py-2">{x}</td></tr>)}
+          </td>
+          <td>
+            {currentPrice.length > 0 && currentPrice.map((x) => <tr scope="row"><td className="py-2">{x}</td></tr>)}
           </td>
           <td>
             {quantity.length > 0 &&
